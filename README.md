@@ -1,136 +1,186 @@
-# DIO Spring Boot Learning Track
+# Projeto de API Inteligente com Spring Boot e Spring AI
 
-This repository contains a DIO Spring Boot learning track organized as incremental modules.
+Este repositório reúne o material do track de aprendizado da DIO e o projeto final da trilha de Spring AI, focado em uma API para processamento de comandos de voz relacionados a transações financeiras.
 
-The track starts with architecture foundations and progressively moves through web APIs, data access, security, service integration, and AI-enabled workflows.
+A ideia principal é demonstrar a integração entre:
 
-<img width="2752" height="1536" alt="unnamed" src="https://github.com/user-attachments/assets/a7bcbe19-4d0c-4395-8696-8c64be22764f" />
-
-## Modules
-
-- [`00-domain-driven-design`](00-domain-driven-design/README.md)  
-  DDD foundations with a catalog domain and no web layer.
-- [`01-spring-web`](01-spring-web/README.md)  
-  REST API design with Spring Web and API documentation with Spring REST Docs.
-- [`02-spring-data`](02-spring-data/README.md)  
-  Data access in a multi-context application using MySQL, MongoDB, Redis, and PostgreSQL.
-- [`03-spring-security`](03-spring-security/README.md)  
-  Authentication and authorization with Spring Security in a proposal management API.
-- [`04-spring-cloud-openfeign`](04-spring-cloud-openfeign/README.md)  
-  External service integration (KYC/AML) using Spring Cloud OpenFeign and resilience patterns.
-- [`05-spring-ai`](05-spring-ai/README.md)  
-  Final project using Spring AI for speech-to-text, tool calling, and text-to-speech.
-
-## Recommended Study Order
-
-1. [`00-domain-driven-design`](00-domain-driven-design/README.md)
-2. [`01-spring-web`](01-spring-web/README.md)
-3. [`02-spring-data`](02-spring-data/README.md)
-4. [`03-spring-security`](03-spring-security/README.md)
-5. [`04-spring-cloud-openfeign`](04-spring-cloud-openfeign/README.md)
-6. [`05-spring-ai`](05-spring-ai/README.md)
+- Spring Boot
+- Spring AI
+- OpenAI / modelos de linguagem
+- Transcrição de áudio
+- Tool Calling
+- Geração de voz a partir da resposta final
+- Persistência com JPA e MySQL
 
 ---
 
-## Shared Architecture Guide
+## Visão geral
 
-The sections below consolidate architecture topics that are intentionally reused across modules.
+O projeto implementa uma solução em camadas que permite:
 
-### DDD Layered Architecture
+1. Receber um arquivo de áudio via API REST.
+2. Converter áudio em texto usando transcrição.
+3. Interpretar a intenção do usuário com IA.
+4. Executar operações reais sobre transações financeiras.
+5. Consultar ou criar registros persistidos.
+6. Retornar uma resposta em áudio para o cliente.
 
-Most modules follow the same conceptual split:
+O fluxo principal é:
 
 ```text
-domain/          -> business model, invariants, contracts
-application/     -> use cases, orchestration, application policies
-infrastructure/  -> adapters (HTTP, persistence, external clients, framework glue)
+Áudio -> Transcrição -> IA -> Tool Calling -> Persistência/Consulta -> Resposta em voz
 ```
-
-Why this matters:
-
-- `domain` stays focused on business language and rules, not framework details.
-- `application` coordinates domain behavior for specific user/business actions.
-- `infrastructure` can change (database, web transport, external APIs) without forcing core business rewrites.
-
-This separation reduces coupling and supports long-term maintainability.
-
-### Java Class vs Java Record in Domain Modeling
-
-A practical guideline used across the track:
-
-- Use `class` for entities/aggregates that have identity and may evolve behavior over time.
-- Use `record` for immutable value objects and DTO-style transport models.
-
-Design trade-offs:
-
-- `class` supports richer lifecycle behavior and controlled mutation.
-- `record` reduces boilerplate and makes immutability explicit.
-
-This distinction improves code intent and keeps domain concepts clearer.
-
-### Strong Typed Identifiers
-
-Instead of passing raw primitives (`UUID`, `String`) everywhere, modules wrap identifiers in explicit types such as `BookId`, `TaskId`, `ProposalId`, and `TransactionId`.
-
-Benefits:
-
-- Better compile-time safety (fewer accidental ID mix-ups).
-- More expressive signatures (`findById(TaskId id)` communicates intent).
-- Cleaner evolution path for ID rules and validation.
-
-### Repository Pattern
-
-The repository contract belongs to the business side, while technology-specific implementations stay in infrastructure.
-
-Pattern used in this repository:
-
-- Domain contract: `XxxRepository` in `domain/`.
-- Adapter implementation: JPA/in-memory/etc. in `infrastructure/`.
-
-Architectural impact:
-
-- Business logic depends on abstractions, not persistence frameworks.
-- Switching storage technology becomes an adapter change, not a domain rewrite.
-- Unit testing use cases becomes simpler with fake/mock repositories.
-
-### Use Cases and Clean Architecture
-
-Each use case models one business capability (for example, create task, list proposals, analyze company risk).
-
-Common flow:
-
-1. Controller/listener receives an external request.
-2. It calls one application use case.
-3. The use case orchestrates domain objects and repository/gateway contracts.
-4. Infrastructure adapters handle persistence or external integrations.
-
-Why this is important:
-
-- Strong single-responsibility boundaries.
-- Easier testability and refactoring.
-- Better readability of business workflows.
-
-### Docker Compose Support in Development
-
-Several modules include `compose.yml` and Spring Boot Docker Compose support.
-
-Typical local development role:
-
-- Start required infra services (database/cache/message dependencies).
-- Keep local setup reproducible for all students.
-- Reduce onboarding friction by standardizing environment dependencies.
-
-Note: exact behavior can vary by module configuration and runtime profile.
 
 ---
 
-## Quick Start
+## Objetivo do projeto
 
-Choose a module and run its local instructions:
+Criar uma API inteligente para processamento de comandos financeiros em linguagem natural, com suporte a voz. Exemplos de comandos esperados:
+
+- "Gastei 45 reais no mercado hoje"
+- "Paguei 80 reais no restaurante"
+- "Mostre minhas despesas de alimentação"
+- "Cadastre uma compra de 120 reais em farmácia"
+
+---
+
+## Estrutura do repositório
+
+```text
+.
+├── 00-domain-driven-design/
+├── 01-spring-web/
+├── 02-spring-data/
+├── 03-spring-security/
+├── 04-spring-cloud-openfeign/
+├── 05-spring-ai/
+│   ├── src/
+│   ├── build.gradle
+│   ├── compose.yml
+│   ├── gradlew
+│   ├── settings.gradle
+│   └── README.md
+├── .gitignore
+├── README.md
+└── .gitattributes
+```
+
+O módulo principal da aplicação inteligente está em:
+
+- [05-spring-ai](05-spring-ai/README.md)
+
+---
+
+## Stack tecnológica
+
+- Java 24/25
+- Spring Boot 3.x / 4.x
+- Spring AI
+- Spring Web
+- Spring Data JPA
+- MySQL
+- OpenAI API
+- Gradle
+
+---
+
+## Requisitos
+
+Antes de executar o projeto, você precisará de:
+
+- JDK 24 ou superior
+- Gradle
+- Docker
+- Conta e chave da OpenAI
+- MySQL em execução localmente ou via Docker Compose
+
+---
+
+## Configuração do ambiente
+
+1. Clone o repositório
+2. Acesse a pasta do projeto final:
 
 ```bash
-cd 01-spring-web
+cd 05-spring-ai
+```
+
+3. Configure a chave da API OpenAI:
+
+```bash
+export OPENAI_API_KEY="sua_chave_aqui"
+```
+
+No Windows PowerShell:
+
+```powershell
+$env:OPENAI_API_KEY="sua_chave_aqui"
+```
+
+4. Suba o banco MySQL:
+
+```bash
+docker compose up -d
+```
+
+---
+
+## Como executar
+
+Na pasta do módulo:
+
+```bash
+./gradlew bootRun
+```
+
+Para rodar os testes:
+
+```bash
 ./gradlew test
 ```
 
-For module-specific details, always check each module README from the links above.
+---
+
+## Endpoints principais
+
+A API expõe rotas REST para:
+
+- criação de transações
+- consulta de transações
+- upload de áudio
+- processamento com IA
+- retorno de resposta em texto ou áudio
+
+---
+
+## Fluxo da aplicação
+
+1. O cliente envia um áudio.
+2. A aplicação faz a transcrição com `TranscriptionModel`.
+3. O texto é interpretado pelo `ChatClient`.
+4. A IA chama ferramentas reais da aplicação.
+5. A lógica executa a operação financeira.
+6. A resposta final pode ser convertida em voz com `TextToSpeechModel`.
+
+---
+
+## Observações
+
+Este é um projeto educacional que combina arquitetura, APIs REST e integração com IA, seguindo boas práticas de organização por camadas.
+
+O objetivo principal é entender como usar Spring AI de forma disciplinada em uma aplicação realista, sem perder a separação entre domínio, casos de uso e infraestrutura.
+
+---
+
+## Autor
+
+Projeto baseado no track de aprendizado da Digital Innovation One (DIO), adaptado para o cenário de API inteligente com processamento de voz e IA.
+
+---
+
+## Próximos passos
+
+- configurar o repositório como privado no GitHub
+- criar o remote do projeto pessoal
+- fazer o push para o GitHub
+- documentar endpoints e exemplos de uso em um arquivo adicional de documentação
